@@ -29,7 +29,7 @@ impl Public {
     // Constructors
 
     pub fn init(
-        root: PathBuf,
+        root: &PathBuf,
         default_limit: usize,
         default_capacity: usize,
     ) -> Result<Self, String> {
