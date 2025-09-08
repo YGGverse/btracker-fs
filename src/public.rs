@@ -74,6 +74,9 @@ impl Public {
         Ok((t, b))
     }
 
+    /// Build URI for given `path`
+    ///
+    /// * result requires URL encode
     pub fn href(&self, info_hash: &str, path: &str) -> Option<String> {
         let mut relative = PathBuf::from(info_hash);
         relative.push(path);
@@ -84,6 +87,21 @@ impl Public {
         let c = absolute.canonicalize().ok()?;
         if c.starts_with(&self.root) && c.exists() {
             Some(relative.to_string_lossy().into())
+        } else {
+            None
+        }
+    }
+
+    /// Return canonical absolute path
+    ///
+    /// * `None` if the given URI does not exist or has denied location
+    pub fn path(&self, relative: &str) -> Option<PathBuf> {
+        let mut p = PathBuf::from(&self.root);
+        p.push(&relative);
+
+        let path = p.canonicalize().ok()?;
+        if path.starts_with(&self.root) && c.exists() {
+            Some(path)
         } else {
             None
         }
