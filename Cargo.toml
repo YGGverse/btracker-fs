@@ -16,3 +16,4 @@ public = []
 
 [dependencies]
 chrono = { version = "0.4.41", features = ["serde"] }
+librqbit-core = "5.0.0"
