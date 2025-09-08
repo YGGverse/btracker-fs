@@ -99,9 +99,9 @@ impl Public {
         let mut p = PathBuf::from(&self.root);
         p.push(&relative);
 
-        let path = p.canonicalize().ok()?;
-        if path.starts_with(&self.root) && c.exists() {
-            Some(path)
+        let c = p.canonicalize().ok()?;
+        if c.starts_with(&self.root) && c.exists() {
+            Some(c)
         } else {
             None
         }
