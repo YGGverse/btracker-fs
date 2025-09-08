@@ -100,7 +100,7 @@ impl Public {
         p.push(&relative);
 
         let c = p.canonicalize().ok()?;
-        if c.starts_with(&self.root) && c.exists() && c.is_file() {
+        if c.starts_with(&self.root) && c.is_file() {
             Some(c)
         } else {
             None
