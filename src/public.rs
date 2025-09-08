@@ -92,15 +92,15 @@ impl Public {
         }
     }
 
-    /// Return canonical absolute path
+    /// Return canonical absolute path to file
     ///
     /// * `None` if the given URI does not exist or has denied location
-    pub fn path(&self, relative: &str) -> Option<PathBuf> {
+    pub fn filepath(&self, relative: &str) -> Option<PathBuf> {
         let mut p = PathBuf::from(&self.root);
         p.push(&relative);
 
         let c = p.canonicalize().ok()?;
-        if c.starts_with(&self.root) && c.exists() {
+        if c.starts_with(&self.root) && c.exists() && c.is_file() {
             Some(c)
         } else {
             None
