@@ -12,12 +12,11 @@ repository = "https://github.com/yggverse/btracker-fs"
 
 [features]
 # default = ["public"]
-public = []
-crawler = []
+public = ["chrono", "librqbit-core"]
+crawler = ["log", "regex"]
 
 [dependencies]
-chrono = { version = "0.4.41", features = ["serde"] }
-librqbit-core = "5.0.0"
-
-log = "0.4.28"
-regex = "1.11.2"
+chrono = { version = "0.4.41", features = ["serde"], optional = true }
+librqbit-core = { version = "5.0.0", optional = true }
+log = { version = "0.4.28", optional = true }
+regex = { version = "1.11.2", optional = true }
