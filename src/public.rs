@@ -1,3 +1,8 @@
+//! Frontend features for the following βtracker project components:
+//!
+//! * https://github.com/YGGverse/btracker
+//! * https://github.com/YGGverse/btracker-gemini
+
 use chrono::{DateTime, Utc};
 use std::{fs, io::Error, path::PathBuf, time::SystemTime};
 
@@ -19,13 +24,13 @@ pub struct Torrent {
     pub time: DateTime<Utc>,
 }
 
-pub struct Public {
+pub struct Storage {
     default_capacity: usize,
     pub default_limit: usize,
     root: PathBuf,
 }
 
-impl Public {
+impl Storage {
     // Constructors
 
     pub fn init(
