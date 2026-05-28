@@ -4,7 +4,14 @@
 //! * https://github.com/YGGverse/btracker-gemini
 
 use chrono::{DateTime, Utc};
-use std::{fs, io::Error, path::PathBuf, time::SystemTime};
+use librqbit_core::Id20;
+use std::{
+    fs,
+    io::Error,
+    path::{Path, PathBuf},
+    str::FromStr,
+    time::SystemTime,
+};
 
 #[derive(Clone, Debug, Default)]
 pub enum Sort {
@@ -34,7 +41,7 @@ impl Storage {
     // Constructors
 
     pub fn init(
-        root: &PathBuf,
+        root: &Path,
         default_limit: usize,
         default_capacity: usize,
     ) -> Result<Self, String> {
@@ -50,7 +57,7 @@ impl Storage {
 
     // Getters
 
-    pub fn torrent(&self, info_hash: librqbit_core::Id20) -> Option<Torrent> {
+    pub fn torrent(&self, info_hash: Id20) -> Option<Torrent> {
         let mut p = PathBuf::from(&self.root);
         p.push(format!("{}.{E}", info_hash.as_string()));
         Some(Torrent {
@@ -65,18 +72,32 @@ impl Storage {
         sort_order: Option<(Sort, Order)>,
         start: Option<usize>,
         limit: Option<usize>,
-    ) -> Result<(usize, Vec<Torrent>), Error> {
+        visibility_filter: impl Fn(Id20) -> bool,
+    ) -> Result<Torrents, Error> {
         let f = self.files(keyword, sort_order)?;
-        let t = f.len();
+        let t = f.len(); // total
         let l = limit.unwrap_or(t);
+        let s = start.unwrap_or_default();
         let mut b = Vec::with_capacity(l);
-        for file in f.into_iter().skip(start.unwrap_or_default()).take(l) {
-            b.push(Torrent {
-                bytes: fs::read(file.path)?,
-                time: file.modified.into(),
-            })
+        let mut i = 0; // start offset
+        for file in f.iter().filter(|file| {
+            file.path
+                .file_stem()
+                .is_some_and(|n| Id20::from_str(&n.to_string_lossy()).is_ok_and(&visibility_filter))
+        }) {
+            if i >= s && b.len() <= l {
+                b.push(Torrent {
+                    bytes: fs::read(&file.path)?,
+                    time: file.modified.into(),
+                })
+            }
+            i += 1
         }
-        Ok((t, b))
+        Ok(Torrents {
+            total: t,
+            visible: i,
+            list: b,
+        })
     }
 
     /// Build URI for given `path`
@@ -102,7 +123,7 @@ impl Storage {
     /// * `None` if the given URI does not exist or has denied location
     pub fn filepath(&self, relative: &str) -> Option<PathBuf> {
         let mut p = PathBuf::from(&self.root);
-        p.push(&relative);
+        p.push(relative);
 
         let c = p.canonicalize().ok()?;
         if c.starts_with(&self.root) && c.is_file() {
@@ -178,8 +199,8 @@ impl Storage {
         if let Some((sort, order)) = sort_order {
             match sort {
                 Sort::Modified => match order {
-                    Order::Asc => files.sort_by(|a, b| a.modified.cmp(&b.modified)),
-                    Order::Desc => files.sort_by(|a, b| b.modified.cmp(&a.modified)),
+                    Order::Asc => files.sort_by_key(|a| a.modified),
+                    Order::Desc => files.sort_by_key(|b| std::cmp::Reverse(b.modified)),
                 },
             }
         }
@@ -200,4 +221,10 @@ const S: &[char] = &[
 struct File {
     modified: SystemTime,
     path: PathBuf,
+}
+
+pub struct Torrents {
+    pub total: usize,
+    pub visible: usize,
+    pub list: Vec<Torrent>,
 }
