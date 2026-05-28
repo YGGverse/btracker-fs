@@ -85,7 +85,7 @@ impl Storage {
                 .file_stem()
                 .is_some_and(|n| Id20::from_str(&n.to_string_lossy()).is_ok_and(&visibility_filter))
         }) {
-            if i >= s && b.len() <= l {
+            if i >= s && b.len() < l {
                 b.push(Torrent {
                     bytes: fs::read(&file.path)?,
                     time: file.modified.into(),
